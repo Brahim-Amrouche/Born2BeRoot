@@ -1,0 +1,48 @@
+dnf whatprovides semanage
+dnf install epel-release -y
+dnf install ufw -y
+ufw enable
+ufw delete 1
+ufw delete 2
+ufw default allow outgoing
+ufw default deny  incomming
+ufw allow 4242/tcp
+systemctl stop firewalld
+systemctl disable firewalld
+systemctl mask  firewalld
+systemctl start ufw
+systemctl enable ufw
+systemctl unmask ufw
+semanage port -a -t ssh_port_t -p tcp 4242
+
+
+Password Policy :
+    1- modify /etc/security/pwquality.conf
+    2- modify /etc/login.defs
+
+Sudo Policy :
+    command : visudo
+    1 - Defaults passwd_tries = 3
+    2 - Defaults badpass_message = "message"
+    3 - Defaults log_input, log_output,iolog_dir=
+    4 - Defaults requiretty
+    5 - Defaults secure_path = /smth/smth
+
+Script :
+    #Architecture : echo "$(uname -s) $(uname -n) $(uname -r) $(cat /etc/centos-release) $(uname -v) $(uname -p) $(uname -o)"
+    #pCPU : nproc --all
+    #vCPU : cat /proc/cpuinfo | grep processor | wc -l
+    total_mem = free -m | awk 'FNR == 2 {print $2}'
+    used_mem = free -m | awk 'FNR == 2 {print $3}'
+    echo "#mem : $used_mem / $total_mem $((($used_mem * 100) / $total_mem)) %"
+    total_available : df -BM  --output=avail | awk '{sum+=$1;}END{print sum/1024;}'
+    used_storage : df -BM --output=used | awk '{sum+=$1;}END{print sum}'
+    percent_storage : $((($used_storage * 100) / $total_storage))
+    cpu_usage= `top -bn1 | grep load | awk '{printf "%.2f",$(NF-2) }'`
+    last_reboot = `who -b | sed 's/^ *//g' | cut -f 4- -d " "`
+    lvm_used = `lsblk --output=type | grep lvm | awk '{if ($1) {printf "yes";exit;} else {printf "no"}}'`
+    active_connections  = `netstat -a | grep ESTABLISHED | wc -l`
+    active_users = who | wc -l
+    ip_address = hostname -I | cut -f 1 -d ' '
+    mac_address = ifconfig | grep ether | sed 's/^ *//g | cut -f 2 -d " " | head -n 1'
+    sudo_commands = grep sudo /var/log/secure | wc -l
